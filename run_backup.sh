@@ -11,4 +11,10 @@ docker run --rm \
     -e MODE=backup \
     horizon-database-backup
 
-source /root/.bashrc && aws s3 sync $DATABASE_BACKUP_LOC $DATABASE_BACKUP_S3_DEST --exact-timestamps --no-progress
+source /root/.bashrc && \
+AWS_ACCESS_KEY_ID="$BACKUP_AWS_ACCESS_KEY_ID" \
+AWS_SECRET_ACCESS_KEY="$BACKUP_AWS_SECRET_ACCESS_KEY" \
+AWS_DEFAULT_REGION="$BACKUP_AWS_REGION" \
+aws s3 sync "$DATABASE_BACKUP_LOC" "$DATABASE_BACKUP_S3_DEST" \
+  --exact-timestamps \
+  --no-progress
