@@ -1,23 +1,29 @@
-# Use an official Microsoft SQL Server image
-FROM mcr.microsoft.com/dotnet/core/sdk:3.1 as builder
+FROM ubuntu:22.04
 
-RUN apt-get update
-RUN apt-get install curl gnupg software-properties-common python3 python3-pip -y
-RUN curl https://packages.microsoft.com/keys/microsoft.asc > gpg_key.txt && apt-key add gpg_key.txt
-RUN curl https://packages.microsoft.com/config/ubuntu/20.04/prod.list | tee /etc/apt/sources.list.d/msprod.list
-RUN apt-get update
-ENV ACCEPT_EULA=Y
-RUN apt-get install mssql-tools unixodbc-dev -y
-RUN echo 'export PATH="$PATH:/opt/mssql-tools/bin"' >> ~/.bashrc
+ENV DEBIAN_FRONTEND=noninteractive
 
-# Create a directory for the backup script
-RUN mkdir /backup
+# Base deps
+RUN apt-get update && apt-get install -y \
+    curl ca-certificates gnupg \
+    python3 python3-pip \
+    unixodbc-dev \
+  && rm -rf /var/lib/apt/lists/*
 
-# Copy the backup script to the container
+# Microsoft repo + mssql-tools18 (sqlcmd/bcp)
+RUN curl https://packages.microsoft.com/keys/microsoft.asc \
+      | tee /etc/apt/trusted.gpg.d/microsoft.asc >/dev/null \
+ && curl https://packages.microsoft.com/config/ubuntu/22.04/prod.list \
+      | tee /etc/apt/sources.list.d/mssql-release.list >/dev/null \
+ && apt-get update \
+ && ACCEPT_EULA=Y apt-get install -y mssql-tools18 \
+ && rm -rf /var/lib/apt/lists/*
+
+ENV PATH="$PATH:/opt/mssql-tools18/bin"
+
+# Script
+RUN mkdir -p /backup
 COPY backup.sh /backup/backup_script.sh
-
-# Make the script executable
 RUN chmod +x /backup/backup_script.sh
 
-# Set the entry point to run the backup script
 ENTRYPOINT ["/backup/backup_script.sh"]
+
