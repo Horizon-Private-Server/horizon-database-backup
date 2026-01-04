@@ -1,4 +1,10 @@
+#!/bin/bash
+
 set -e
+ 
+source /root/.bashrc
+cd /root/horizon-uya-prod/horizon-database-backup
+
 
 docker build . -t horizon-database-backup
 
